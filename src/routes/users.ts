@@ -1,8 +1,7 @@
-import { FastifyInstance } from "fastify";
+import { FastifyInstance } from 'fastify'
 
-
-export function userRoutes(app: FastifyInstance) {
+export async function userRoutes(app: FastifyInstance) {
   app.get('hello', (req, reply) => {
-    return reply.send("Hello!")
+    return reply.send('Hello!')
   })
 }
