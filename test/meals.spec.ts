@@ -41,27 +41,27 @@ describe('Meals routes', () => {
     })
   })
 
-  it('should be able to create a new meal', async () => {})
+  it.skip('should be able to create a new meal', async () => {})
 
-  it('should be able to edit a meal', async () => {})
+  it.skip('should be able to edit a meal', async () => {})
 
-  it('should not be able to edit a meal from another user', async () => {})
+  it.skip('should not be able to edit a meal from another user', async () => {})
 
-  it('should be able to delete a meal', async () => {})
+  it.skip('should be able to delete a meal', async () => {})
 
-  it('should not be able to delete a meal from another user', async () => {})
+  it.skip('should not be able to delete a meal from another user', async () => {})
 
-  it('should be able to list all meals from a user', async () => {})
+  it.skip('should be able to list all meals from a user', async () => {})
 
-  it('should not be able to list all meals from another user', async () => {})
+  it.skip('should not be able to list all meals from another user', async () => {})
 
-  it('should be able to get a specific meal', async () => {})
+  it.skip('should be able to get a specific meal', async () => {})
 
-  it('should not be able to get a specific meal from another user', async () => {})
+  it.skip('should not be able to get a specific meal from another user', async () => {})
 
-  it('should be able to get the metrics from the user', async () => {})
+  it.skip('should be able to get the metrics from the user', async () => {})
 
-  it('should not be able to get the metrics from another user', async () => {})
+  it.skip('should not be able to get the metrics from another user', async () => {})
   //   - Deve ser possível registrar uma refeição feita, com as seguintes informações:
   //     *As refeições devem ser relacionadas a um usuário.*
   //     - Nome
