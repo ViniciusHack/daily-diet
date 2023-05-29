@@ -1,12 +1,5 @@
-import fastify from 'fastify'
+import { app } from './app'
 import { env } from './env'
-import { userRoutes } from './routes/users'
-
-const app = fastify()
-
-app.register(userRoutes, {
-  prefix: 'users',
-})
 
 app
   .listen({
