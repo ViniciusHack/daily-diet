@@ -169,14 +169,17 @@ describe('Meals routes', () => {
       .get('/meals')
       .set('Cookie', cookies)
 
+    const mealsToCheck = meals.map((meal) => ({
+      name: meal.name,
+      description: meal.description,
+      diet: meal.diet,
+    }))
+
     expect(listMealsResponse.body.meals).toEqual(
-      expect.arrayContaining(
-        meals.map((meal) => ({
-          name: meal.name,
-          description: meal.description,
-          diet: meal.diet,
-        })),
-      ),
+      expect.arrayContaining([
+        expect.objectContaining(mealsToCheck[0]),
+        expect.objectContaining(mealsToCheck[1]),
+      ]),
     )
   })
 
@@ -224,12 +227,6 @@ describe('Meals routes', () => {
   it.skip('should be able to get the metrics from the user', async () => {})
 
   it.skip('should not be able to get the metrics from another user', async () => {})
-  //   - Deve ser possível registrar uma refeição feita, com as seguintes informações:
-  //     *As refeições devem ser relacionadas a um usuário.*
-  //     - Nome
-  //     - Descrição
-  //     - Data e Hora
-  //     - Está dentro ou não da dieta
   // - Deve ser possível recuperar as métricas de um usuário
   //     - Quantidade total de refeições registradas
   //     - Quantidade total de refeições dentro da dieta

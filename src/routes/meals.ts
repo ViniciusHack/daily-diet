@@ -108,8 +108,10 @@ export async function mealRoutes(app: FastifyInstance) {
         .first()
 
       if (!meal) {
-        return reply.status(404)
+        return reply.status(404).send()
       }
+
+      meal.diet = !!meal.diet
 
       return reply.status(200).send({ meal })
     },
@@ -127,7 +129,9 @@ export async function mealRoutes(app: FastifyInstance) {
         userId: sessionId,
       })
 
-      return reply.status(200).send({ meals })
+      return reply
+        .status(200)
+        .send({ meals: meals.map((meal) => ({ ...meal, diet: !!meal.diet })) })
     },
   )
 }
