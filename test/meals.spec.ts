@@ -1,7 +1,22 @@
 import { execSync } from 'child_process'
 import request from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../src/app'
+
+const meals = [
+  {
+    name: 'Testing meal',
+    description: 'My testing meal',
+    eatenAt: new Date('2023-05-30T16:00:00.000Z'),
+    diet: true,
+  },
+  {
+    name: 'Testing meal part 2',
+    description: 'My testing meal part 2',
+    eatenAt: new Date('2023-05-20T16:00:00.000Z'),
+    diet: false,
+  },
+]
 
 describe('Meals routes', () => {
   beforeAll(async () => {
@@ -12,26 +27,32 @@ describe('Meals routes', () => {
     await app.close()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     execSync('npm run knex -- migrate:rollback --all')
     execSync('npm run knex -- migrate:latest')
+    const response = await request(app.server).post('/users').send({
+      email: 'test@test.com',
+    })
+    cookies = response.get('Set-Cookie')
   })
+
+  let cookies: string[] = []
 
   describe('Users', () => {
     it('should be able to create a new user', async () => {
-      await request(app.server)
+      const userResponse = await request(app.server)
         .post('/users')
         .send({
-          email: 'test@test.com',
+          email: 'testing@test.com',
         })
         .expect(201)
+
+      expect(userResponse.body.user).toEqual(
+        expect.objectContaining({ id: expect.any('string') }),
+      )
     })
 
     it('should not be able to create a user that already exists', async () => {
-      await request(app.server).post('/users').send({
-        email: 'test@test.com',
-      })
-
       await request(app.server)
         .post('/users')
         .send({
@@ -41,23 +62,166 @@ describe('Meals routes', () => {
     })
   })
 
-  it.skip('should be able to create a new meal', async () => {})
+  it('should be able to create a new meal', async () => {
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', cookies)
+      .expect(201)
 
-  it.skip('should be able to edit a meal', async () => {})
+    expect(mealResponse.body.meal).toEqual(
+      expect.objectContaining({
+        id: expect.any('string'),
+      }),
+    )
+  })
 
-  it.skip('should not be able to edit a meal from another user', async () => {})
+  it('should be able to edit a meal', async () => {
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', cookies)
 
-  it.skip('should be able to delete a meal', async () => {})
+    const mealId = mealResponse.body.meal.id
 
-  it.skip('should not be able to delete a meal from another user', async () => {})
+    await request(app.server)
+      .put(`/meals/${mealId}`)
+      .send({
+        name: 'My meal edited',
+        eatenAt: new Date('2023-05-30T12:00:00.000Z'),
+      })
+      .set('Cookie', cookies)
+      .expect(200)
+  })
 
-  it.skip('should be able to list all meals from a user', async () => {})
+  it('should not be able to edit a meal from another user', async () => {
+    const userResponse = await request(app.server).post('/users').send({
+      email: 'testing@test.com',
+    })
 
-  it.skip('should not be able to list all meals from another user', async () => {})
+    const anotherUserCookies = userResponse.get('Set-Cookie')
 
-  it.skip('should be able to get a specific meal', async () => {})
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[1])
+      .set('Cookie', anotherUserCookies)
 
-  it.skip('should not be able to get a specific meal from another user', async () => {})
+    const mealId = mealResponse.body.meal.id
+
+    await request(app.server)
+      .put(`/meals/${mealId}`)
+      .send({
+        name: 'My meal edited',
+        eatenAt: new Date('2023-05-30T12:00:00.000Z'),
+      })
+      .set('Cookie', cookies)
+      .expect(403)
+  })
+
+  it('should be able to delete a meal', async () => {
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', cookies)
+
+    const mealId = mealResponse.body.meal.id
+
+    await request(app.server)
+      .delete(`/meals/${mealId}`)
+      .set('Cookie', cookies)
+      .expect(200)
+  })
+
+  it('should not be able to delete a meal from another user', async () => {
+    const userResponse = await request(app.server).post('/users').send({
+      email: 'testing@test.com',
+    })
+
+    const anotherUserCookies = userResponse.get('Set-Cookie')
+
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[1])
+      .set('Cookie', anotherUserCookies)
+
+    const mealId = mealResponse.body.meal.id
+
+    await request(app.server)
+      .delete(`/meals/${mealId}`)
+      .set('Cookie', cookies)
+      .expect(403)
+  })
+
+  it('should be able to list all meals from a user', async () => {
+    await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', cookies)
+
+    await request(app.server)
+      .post('/meals')
+      .send(meals[1])
+      .set('Cookie', cookies)
+
+    const listMealsResponse = await request(app.server)
+      .get('/meals')
+      .set('Cookie', cookies)
+
+    expect(listMealsResponse.body.meals).toEqual(expect.arrayContaining(meals))
+  })
+
+  it('should not be able to list all meals from another user', async () => {
+    const userResponse = await request(app.server).post('/users').send({
+      email: 'testing@test.com',
+    })
+
+    const anotherUserCookies = userResponse.get('Set-Cookie')
+
+    await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', anotherUserCookies)
+    await request(app.server)
+      .post('/meals')
+      .send(meals[1])
+      .set('Cookie', anotherUserCookies)
+    await request(app.server).get('/meals').set('Cookie', cookies).expect(403)
+  })
+
+  it('should be able to get a specific meal', async () => {
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', cookies)
+
+    const mealId = mealResponse.body.meal.id
+
+    const getMealResponse = await request(app.server)
+      .get(`/meals/${mealId}`)
+      .set('Cookie', cookies)
+
+    expect(getMealResponse.body.meal).toEqual(expect.objectContaining(meals[0]))
+  })
+
+  it('should not be able to get a specific meal from another user', async () => {
+    const userResponse = await request(app.server).post('/users').send({
+      email: 'testing@test.com',
+    })
+
+    const anotherUserCookies = userResponse.get('Set-Cookie')
+
+    const mealResponse = await request(app.server)
+      .post('/meals')
+      .send(meals[0])
+      .set('Cookie', anotherUserCookies)
+
+    const mealId = mealResponse.body.meal.id
+
+    await request(app.server)
+      .get(`/meals/${mealId}`)
+      .set('Cookie', cookies)
+      .expect(403)
+  })
 
   it.skip('should be able to get the metrics from the user', async () => {})
 
