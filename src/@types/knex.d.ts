@@ -14,8 +14,8 @@ declare module 'knex/types/tables' {
       description: string
       eatenAt: string
       diet: boolean
-      createdAt: Date
-      updatedAt: Date
+      createdAt: string
+      updatedAt: string
     }
   }
 }

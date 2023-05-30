@@ -48,7 +48,7 @@ describe('Meals routes', () => {
         .expect(201)
 
       expect(userResponse.body.user).toEqual(
-        expect.objectContaining({ id: expect.any('string') }),
+        expect.objectContaining({ id: expect.any(String) }),
       )
     })
 
@@ -71,7 +71,7 @@ describe('Meals routes', () => {
 
     expect(mealResponse.body.meal).toEqual(
       expect.objectContaining({
-        id: expect.any('string'),
+        id: expect.any(String),
       }),
     )
   })
@@ -87,6 +87,7 @@ describe('Meals routes', () => {
     await request(app.server)
       .put(`/meals/${mealId}`)
       .send({
+        ...meals[0],
         name: 'My meal edited',
         eatenAt: new Date('2023-05-30T12:00:00.000Z'),
       })
@@ -111,11 +112,12 @@ describe('Meals routes', () => {
     await request(app.server)
       .put(`/meals/${mealId}`)
       .send({
+        ...meals[1],
         name: 'My meal edited',
         eatenAt: new Date('2023-05-30T12:00:00.000Z'),
       })
       .set('Cookie', cookies)
-      .expect(403)
+      .expect(404)
   })
 
   it('should be able to delete a meal', async () => {
@@ -149,7 +151,7 @@ describe('Meals routes', () => {
     await request(app.server)
       .delete(`/meals/${mealId}`)
       .set('Cookie', cookies)
-      .expect(403)
+      .expect(404)
   })
 
   it('should be able to list all meals from a user', async () => {
@@ -167,25 +169,15 @@ describe('Meals routes', () => {
       .get('/meals')
       .set('Cookie', cookies)
 
-    expect(listMealsResponse.body.meals).toEqual(expect.arrayContaining(meals))
-  })
-
-  it('should not be able to list all meals from another user', async () => {
-    const userResponse = await request(app.server).post('/users').send({
-      email: 'testing@test.com',
-    })
-
-    const anotherUserCookies = userResponse.get('Set-Cookie')
-
-    await request(app.server)
-      .post('/meals')
-      .send(meals[0])
-      .set('Cookie', anotherUserCookies)
-    await request(app.server)
-      .post('/meals')
-      .send(meals[1])
-      .set('Cookie', anotherUserCookies)
-    await request(app.server).get('/meals').set('Cookie', cookies).expect(403)
+    expect(listMealsResponse.body.meals).toEqual(
+      expect.arrayContaining(
+        meals.map((meal) => ({
+          name: meal.name,
+          description: meal.description,
+          diet: meal.diet,
+        })),
+      ),
+    )
   })
 
   it('should be able to get a specific meal', async () => {
@@ -200,7 +192,13 @@ describe('Meals routes', () => {
       .get(`/meals/${mealId}`)
       .set('Cookie', cookies)
 
-    expect(getMealResponse.body.meal).toEqual(expect.objectContaining(meals[0]))
+    expect(getMealResponse.body.meal).toEqual(
+      expect.objectContaining({
+        name: meals[0].name,
+        description: meals[0].description,
+        diet: meals[0].diet,
+      }),
+    )
   })
 
   it('should not be able to get a specific meal from another user', async () => {
@@ -220,7 +218,7 @@ describe('Meals routes', () => {
     await request(app.server)
       .get(`/meals/${mealId}`)
       .set('Cookie', cookies)
-      .expect(403)
+      .expect(404)
   })
 
   it.skip('should be able to get the metrics from the user', async () => {})

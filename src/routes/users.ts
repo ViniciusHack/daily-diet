@@ -37,6 +37,6 @@ export async function userRoutes(app: FastifyInstance) {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     })
 
-    return reply.status(201).send()
+    return reply.status(201).send({ user: { id: userId } })
   })
 }
