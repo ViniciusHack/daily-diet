@@ -7,13 +7,31 @@ const meals = [
   {
     name: 'Testing meal',
     description: 'My testing meal',
-    eatenAt: new Date('2023-05-30T16:00:00.000Z'),
+    eatenAt: new Date('2023-01-01T16:00:00.000Z'),
+    diet: true,
+  },
+  {
+    name: 'Testing meal',
+    description: 'My testing meal',
+    eatenAt: new Date('2023-01-01T19:00:00.000Z'),
+    diet: true,
+  },
+  {
+    name: 'Testing meal',
+    description: 'My testing meal',
+    eatenAt: new Date('2023-01-02T01:00:00.000Z'),
+    diet: true,
+  },
+  {
+    name: 'Testing meal',
+    description: 'My testing meal',
+    eatenAt: new Date('2023-01-04T05:00:00.000Z'),
     diet: true,
   },
   {
     name: 'Testing meal part 2',
     description: 'My testing meal part 2',
-    eatenAt: new Date('2023-05-20T16:00:00.000Z'),
+    eatenAt: new Date('2023-01-05T23:00:00.000Z'),
     diet: false,
   },
 ]
@@ -224,13 +242,21 @@ describe('Meals routes', () => {
       .expect(404)
   })
 
-  it.skip('should be able to get the metrics from the user', async () => {})
+  it('should be able to get the metrics from the user', async () => {
+    for (const meal of meals) {
+      await request(app.server).post('/meals').send(meal).set('Cookie', cookies)
+    }
 
-  it.skip('should not be able to get the metrics from another user', async () => {})
-  // - Deve ser possível recuperar as métricas de um usuário
-  //     - Quantidade total de refeições registradas
-  //     - Quantidade total de refeições dentro da dieta
-  //     - Quantidade total de refeições fora da dieta
-  //     - Melhor sequência por dia de refeições dentro da dieta
-  // - O usuário só pode visualizar, editar e apagar as refeições o qual ele criou
+    const metricsResponse = await request(app.server)
+      .get('/metrics')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(metricsResponse.body.metrics).toEqual({
+      total: meals.length,
+      onTheDiet: meals.filter((meal) => meal.diet).length,
+      offTheDiet: meals.filter((meal) => !meal.diet).length,
+      bestStreak: 2,
+    })
+  })
 })

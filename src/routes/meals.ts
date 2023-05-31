@@ -80,7 +80,6 @@ export async function mealRoutes(app: FastifyInstance) {
         })
         .delete()
         .returning('*')
-      console.log(deleted)
 
       if (!deleted || deleted.length === 0) {
         return reply.status(404).send()
